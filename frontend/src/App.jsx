@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { Component, createContext, useContext, useEffect, useState } from 'react';
 import { Routes, Route, NavLink, Link, Navigate, useNavigate } from 'react-router-dom';
 import { api, probe } from './api.js';
 import Landing from './pages/Landing.jsx';
@@ -7,6 +7,25 @@ import StaffLogin from './pages/StaffLogin.jsx';
 import StaffDashboard from './pages/StaffDashboard.jsx';
 import Admin from './pages/Admin.jsx';
 import NotFound from './pages/NotFound.jsx';
+
+// If any page throws while rendering, show a message instead of a blank screen.
+class ErrorBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(error) { console.error('UI error:', error); }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <div className="container narrow">
+        <div className="card notice error" role="alert">
+          <h1 className="h2">Something went wrong</h1>
+          <p>This page hit an unexpected error. Reload the page; if it keeps happening, go back to the home page.</p>
+          <a className="btn" href="/">Back to home</a>
+        </div>
+      </div>
+    );
+  }
+}
 
 const AuthCtx = createContext(null);
 export const useAuth = () => useContext(AuthCtx);
@@ -82,6 +101,7 @@ export default function App() {
       <a href="#main" className="skip">Skip to content</a>
       <Nav />
       <main id="main">
+        <ErrorBoundary>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/ticket/:id" element={<Ticket />} />
@@ -90,6 +110,7 @@ export default function App() {
           <Route path="/admin" element={<Protected role="admin"><Admin /></Protected>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </ErrorBoundary>
       </main>
       <footer className="site-footer">
         <div className="container">QueueLess - college demo project. Demo counters are fictional.</div>

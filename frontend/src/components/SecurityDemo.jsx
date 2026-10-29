@@ -52,7 +52,11 @@ const CHECKS = [
         seen.push(r.status);
       }
       const first429 = seen.indexOf(429);
-      return { pass: first429 > 0 && seen.slice(0, first429).every((s) => s === 401), got: seen.join(', '), note: first429 > 0 ? `Locked out after ${first429} failed attempts.` : 'No 429 seen. If you ran this within the last minute the first attempts may already have been blocked.' };
+      const pass = first429 !== -1 && seen.slice(0, first429).every((x) => x === 401);
+      const note = first429 > 0 ? `Locked out after ${first429} failed attempts.`
+        : first429 === 0 ? 'This username was already locked out by an earlier run (rate limiting is active). Wait about a minute to see the 401 then 429 sequence again.'
+        : 'No 429 seen, so rate limiting did not trigger.';
+      return { pass, got: seen.join(', '), note };
     },
   },
   {

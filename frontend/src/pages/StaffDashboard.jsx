@@ -14,8 +14,8 @@ export default function StaffDashboard() {
     if (serviceId === null && services.length) setServiceId(services[0].id);
   }, [services, serviceId]);
 
-  const queue = usePolling(serviceId ? `/staff/queue/${serviceId}` : '/health', 3000);
-  const q = serviceId ? queue.data : null;
+  const queue = usePolling(serviceId ? `/staff/queue/${serviceId}` : null, 3000);
+  const q = queue.data?.service ? queue.data : null;
 
   const act = async (path) => {
     setBusy(true); setActionError(null);
@@ -40,6 +40,9 @@ export default function StaffDashboard() {
           </button>
         ))}
       </div>
+
+      {serviceId && !q && !queue.error && <p className="muted" role="status">Loading queue...</p>}
+      {queue.error && !q && <div className="card notice error" role="alert">{queue.error.message}</div>}
 
       {q && (
         <>

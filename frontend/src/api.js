@@ -6,7 +6,7 @@ export class ApiFailure extends Error {
   constructor(status, code, message, data) { super(message); this.status = status; this.code = code; this.data = data; }
 }
 
-export async function api(path, { method = 'GET', body, headers = {}, credentials = 'include' } = {}) {
+async function request(path, { method = 'GET', body, headers = {}, credentials = 'include' } = {}) {
   let res;
   try {
     res = await fetch(`${BASE}/api${path}`, {
@@ -19,19 +19,26 @@ export async function api(path, { method = 'GET', body, headers = {}, credential
   }
   let data = null;
   try { data = await res.json(); } catch { /* non-JSON body */ }
-  if (!res.ok) {
-    const e = data?.error;
-    throw new ApiFailure(res.status, e?.code || 'error', e?.message || `Request failed (${res.status}).`, e);
-  }
-  return data;
+  return { status: res.status, ok: res.ok, data };
 }
 
-// Used by the Security demo: returns the status instead of throwing so we can show the real result.
+export async function api(path, opts) {
+  const r = await request(path, opts);
+  if (!r.ok) {
+    const e = r.data?.error;
+    throw new ApiFailure(r.status, e?.code || 'error', e?.message || `Request failed (${r.status}).`, e);
+  }
+  return r.data;
+}
+
+// Used by the Security demo: never throws and reports the REAL HTTP status the server returned.
 export async function probe(path, opts = {}) {
   try {
-    const r = await api(path, opts);
-    return { status: 200, ok: true, body: r };
+    const r = await request(path, opts);
+    if (r.ok) return { status: r.status, ok: true, body: r.data };
+    const e = r.data?.error;
+    return { status: r.status, ok: false, code: e?.code, message: e?.message, data: e };
   } catch (e) {
-    return { status: e.status, ok: false, code: e.code, message: e.message, data: e.data };
+    return { status: e.status ?? 0, ok: false, code: e.code, message: e.message };
   }
 }

@@ -11,7 +11,7 @@ export default function StaffLogin() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  if (user) return <Navigate to="/staff" replace />;
+  if (user) return <Navigate to={user.role === 'admin' ? '/admin' : '/staff'} replace />;
 
   const submit = async (e) => {
     e.preventDefault();
