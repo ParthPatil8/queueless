@@ -1,0 +1,24 @@
+# ============================================================================
+# QueueLess Analytics Pipeline - Python Dependencies
+# Pinned major versions for reproducibility. To install:
+#   pip install -r requirements.txt
+# ============================================================================
+
+# Core data manipulation
+pandas>=3.0.6,<4.0
+numpy>=2.5.2,<2.6
+
+# Visualization
+matplotlib>=3.11.1,<4.0
+
+# Machine learning (optional linear regression predictor)
+scikit-learn>=1.9.1,<2.0
+joblib>=1.6.0,<2.0
+
+# Optional: MongoDB connectivity for cloud storage demo
+pymongo>=4.18.2,<5.0
+
+# Notebook environment
+jupyter>=1.0
+ipykernel>=6.29
+nbformat>=5.11.1

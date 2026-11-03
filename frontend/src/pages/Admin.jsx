@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { usePolling } from '../hooks.js';
 import SecurityDemo from '../components/SecurityDemo.jsx';
+import UsersPanel from '../components/UsersPanel.jsx';
 
 function ServiceForm({ onCreated }) {
   const [f, setF] = useState({ name: '', description: '', prefix: '', avgMinutes: 5 });
@@ -46,6 +48,7 @@ export default function Admin() {
     <div className="container">
       <p className="eyebrow">Admin</p>
       <h1 className="display sm">Overview</h1>
+      <Link className="btn small ghost" to="/admin/backend">Open backend &amp; database view</Link>
       {summary.error && !d && <div className="card notice error" role="alert">{summary.error.message}</div>}
       {summary.loading && <p className="muted" role="status">Loading...</p>}
       {d && (
@@ -79,6 +82,8 @@ export default function Admin() {
           <ServiceForm onCreated={summary.reload} />
         </>
       )}
+
+      <UsersPanel />
 
       <section aria-labelledby="sec-h" className="security">
         <h2 id="sec-h" className="h2">Security &amp; Safety</h2>

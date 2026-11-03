@@ -9,6 +9,9 @@
     "start": "node backend/src/server.js",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
+    "docker:up": "docker compose up --build",
+    "docker:build": "docker build -t queueless .",
+    "db:view": "node backend/scripts/db-view.js",
     "test": "npm --prefix backend test"
   },
   "engines": { "node": ">=22.13" }

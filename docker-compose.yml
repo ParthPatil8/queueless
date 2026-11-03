@@ -1,0 +1,38 @@
+# Local "cloud-like" stack: the app container + a PostgreSQL container.
+# Start:  docker compose up --build        (needs POSTGRES_PASSWORD and ADMIN_PASSWORD in a .env file)
+# The database port is NOT published, so only the app container can reach it (the same idea as an RDS security group).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: queueless
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (letters and digits only)}
+      POSTGRES_DB: queueless
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U queueless -d queueless"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://queueless:${POSTGRES_PASSWORD}@db:5432/queueless
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env (12+ characters)}
+      COOKIE_SECURE: "false"   # plain HTTP on localhost; use true behind HTTPS
+      TRUST_PROXY: "0"         # no load balancer in front
+      LOG_FORMAT: json
+    restart: unless-stopped
+
+volumes:
+  pgdata:

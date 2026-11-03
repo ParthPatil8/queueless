@@ -1,0 +1,479 @@
+# Changelog
+
+All notable changes to the QueueLess project will be documented in this file.
+
+---
+
+## QueueLess v1.6.0 — Cosmos
+
+Codename **Cosmos** · _LAN Connectivity & UI Polish_. LAN support, UI fixes, performance improvements, session expiry, and a professional repository structure.
+
+### 📡 LAN connectivity
+
+- New `npm run dev:lan` script binds the dev server to all interfaces — kiosks and display boards on the same network can open the app via the machine's LAN IP.
+- Step-by-step LAN guide (API base URL + CORS configuration) in `RUNNING.md` and `docs/Development.md`.
+
+### 🖱️ Interactive UI pass
+
+- Dashboard metric tiles are now **clickable** (deep-link into Analytics) with hover affordances.
+- The SLA overdue alert bar links straight to the Analytics screen.
+- Hover/cursor affordances added wherever an element performs an action.
+
+### 🕒 Session expiry
+
+- New `useSessionExpiry` watchdog decodes the stored admin/staff JWT and checks every 30 s — expired sessions sign out **immediately** and land on the login screen with a "Your session has expired" notice (instead of failing on the next request).
+
+### 🌒 Dark-mode readability
+
+- Global overrides for `text-paper` variants inside flipped `bg-ink` surfaces — fixes invisible text in **Smart Staffing**, the docked messaging bar, and chat bubbles; light chips (`bg-paper/15`) get a dark tint.
+
+### 🚪 Auto-closing workspace panels
+
+- The ✦ Assistant panel and 💬 messaging tray now **close automatically when you switch screens** (route change), with the tray's closed state persisted.
+
+### 🧭 Hidden screens surfaced
+
+- **AI Workspace**, **Notifications**, and **Shared files** links added to the ADMIN ▾ / staff account menus (desktop + mobile) — every screen is now reachable without typing a URL.
+
+### 📈 No static analytics data
+
+- Public `/config` now returns a live `avgServiceSeconds` (observed waits → configured default); the Take-a-Token wait preview uses per-queue averages → live org average — the last hardcoded `180 s` constant is gone.
+
+### 🧑‍💻 Author identity
+
+- GitHub handle updated to **SufiyanAasim** across the app and docs; the Credits picture now loads live from `github.com/SufiyanAasim.png` (auto-updates with the GitHub avatar).
+
+### 🏛️ Professional repository structure
+
+- `.github/`: issue templates (bug/feature/docs/question + security contact), PR template, CODEOWNERS, grouped Dependabot config.
+- `docs/`: Architecture, full API reference, Deployment + env-var matrix, Development guide (incl. LAN access and the Windows `&`-path pitfall), Admin/Staff/User guides, Troubleshooting, and per-release notes (v1.0.0 → v1.6.0) — file naming aligned with the Metro Navigation System repo conventions.
+- Root governance: `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `ROADMAP.md`, `RELEASE.md`, `.editorconfig`, `.gitattributes`.
+- README restructured: badges, hero links, contributors table, per-release notes index.
+
+---
+
+## QueueLess v1.5.5 — Aurora
+
+Codename **Aurora** · Milestone _Summit_. Credits overhaul, UX polish, live config broadcasting, messaging widget fix, and Render deploy reliability hardening.
+
+### 🎖️ Credits page overhaul
+
+- Role subtitle simplified to **"Software Engineer"**; specialisms moved into chip tags (Data Sciences, AI/MLOps Engineering).
+- Added a **Frameworks & Tools** chip grid: React, Vite, Tailwind CSS, Node.js, Express, Firebase, MongoDB, scikit-learn, pandas, GitHub Actions.
+- Removed the automatic `mailto:` redirect on confetti trigger — the thank-you count feedback is now sufficient.
+- "Thanks sent!" copy updated to **"Thanks! 🎉"** for the first thank-you; email address line removed from the button row.
+
+### 🏗️ Layout & UX fixes
+
+- `Layout.jsx` root div gets `pb-20` so page content is never hidden behind the fixed messaging dock.
+- `MessagingDeck` toggle button collapses to `w-auto` when closed, avoiding a wide invisible tap target covering the bottom-right corner.
+
+### ⚡ Live config broadcasting
+
+- `AdminSetup.jsx` now dispatches a `queueless:config` custom event after saving settings — no page reload required.
+- `useAppConfig.js` subscribes to that event and updates all consumers (footer status bar, etc.) immediately.
+
+### 🧪 Test coverage
+
+- New test in `queue.test.js`: `GET /admin/queues/overview` must return `401` without auth and `200` with a valid token (never `404`) — guards against regression of the Render deployment gap.
+
+### 🚀 Render deployment reliability
+
+- `render.yaml` `buildCommand` changed from `npm install` to `npm ci` — ensures every deploy uses exact locked dependency versions.
+- Removed stale `// Trigger build after secret addition` comment from `server.js` (manual workaround, superseded by the CI deploy hook).
+
+
+
+---
+
+## QueueLess v1.5.0 — Quasar
+
+Codename **Quasar** · Milestone _Forge_. The messaging experience is rebuilt as a docked tray.
+
+### 🪟 LinkedIn-style docked message tray
+
+- Replaced the floating chat bubble with a **bottom-anchored docked bar** that slides a chat panel up/down.
+- **Persistent state** — open/closed is remembered across navigation via `localStorage`.
+- **Live unread badge** on the bar that updates even while collapsed (via the content-free `messageSignals` node); smooth hardware-accelerated slide transition.
+
+---
+
+## QueueLess v1.4.5 — Pulsar
+
+Codename **Pulsar** · Milestone _Insight_. Setup and input UX polish.
+
+### 🕰️ Clock-style time pickers
+
+- Native clock-style time inputs (matching the Daily auto-reset field) for queue **working hours** when creating/editing queues.
+
+### 🏙️ City selection at setup
+
+- "Configure your queue" now offers a **city dropdown** (major cities + a custom "Other") alongside the organisation name, replacing the free-text location field.
+
+---
+
+## QueueLess v1.4.0 — Orion
+
+Codename **Orion** · Milestone _Beacon_. Data-quality fixes and the deployment-gap clarification.
+
+### 🧮 Industry-aware analytics
+
+- The analytics **Service Distribution** and peak-hour charts now show **only the current Industry Type's services** (or your custom queues) — stale cross-industry services (Forex/Loan/Card Services from earlier configs) are hidden, with a clarifying subtitle and empty-state.
+
+### 🧾 Enriched analytics CSV
+
+- The exported `queue_events.csv` now includes the **serving counter (`staff_username`)** and **organisation name** alongside token number, service, and timestamps — reliable, traceable export data.
+
+### 🚫 Proper No-show / Skip control
+
+- The skip/no-show action on admin & staff dashboards is now a **clearly styled button** (was an easy-to-miss text link).
+
+### 🧭 Deployment-gap clarification
+
+- Confirmed the new v1.3.x routes (`/admin/queues/overview`, `/admin/audit`, `/admin/queue/refer/:id`, `/admin/predictions`, `/uploads`, `/conversations`, `/notifications`) resolve correctly in the codebase; the live **404s were the old backend still deployed on Render**, not code bugs. Resolved by deploying the current backend.
+
+---
+
+## QueueLess v1.3.5 — Zenith
+
+Codename **Zenith** · Milestone _Intelligent Collaboration_. A multi-phase release turning QueueLess
+into an intelligent operational workspace. **Phase 1 ships the AI Assistant**,
+**Phase 2 ships the internal messaging core**, and **Phase 3 ships the event bus
+and Notification Center**; threads/reactions, file sharing and the dedicated AI
+workspace follow in later phases.
+
+### 🛡️ Role-based access control (Phase 6)
+
+- Introduced an admin-tier **role hierarchy** — **Super Admin > Admin > Manager** (plus Staff). The env-configured bootstrap admin is auto-promoted to **Super Admin** on boot (existing accounts upgraded in place; fully backward compatible).
+- **Managers** get the full operations area (queues, staff, analytics) but **cannot manage admin accounts or change roles**; only **Admins+** manage accounts; only **Super Admin** changes roles or removes a superadmin.
+- New `requireRole(minRole)` middleware guards sensitive routes; `PUT /admin/admins/:username/role` (superadmin) added; create-admin now takes a role. The admin Accounts screen shows roles, lets you create Admin/Manager, and (for superadmins) change roles inline. All role changes are audit-logged. Backend tests now **42**.
+
+### 📁 Shared files — free-plan friendly (Phase 5c)
+
+- A **Shared Files** workspace (`/files`) with **drag-and-drop upload**, list, download, and delete — for reports, exports and documents (images, PDF, CSV, Excel, Word, ZIP).
+- **Stays on the free Spark plan**: files are stored in the **Realtime Database** via the Admin SDK rather than Cloud Storage (which now requires the paid Blaze plan). Bounded to **2 MB/file** with strict type/size validation; metadata is indexed separately so listings never pull blobs; content served only via the JWT API; uploads/deletes are audit-logged.
+- New APIs: `POST/GET/DELETE /uploads`, `GET /uploads/:id`. A scoped 4 MB JSON limit applies to `/uploads` only. Backend tests now **45**.
+
+### 🔗 Secure sharing + audit log (Phase 5b)
+
+- **Share snapshots** (queue analytics, queue snapshots, tokens, reports) via **secure capability links** — a 128-bit random id acts as the secret; links carry an expiry (default 7 days) and can be revoked.
+- **QR codes** (generated client-side) and a **printable public view** at `/share/:id`. A "Share snapshot" action ships on the per-queue analytics screen.
+- **Audit log**: an append-only record of sensitive actions (admin created/deleted, staff removed, queue deleted, share created/revoked), surfaced on a new admin **Activity** screen (`GET /admin/audit`).
+- New APIs: `POST/GET/DELETE /shares`, public `GET /share/:id`, `GET /admin/audit`. Backend tests now **38**.
+
+### 🧠 AI Conversation Workspace (Phase 5a)
+
+- A dedicated **full-screen AI workspace** (`/assistant`) with a **history sidebar**: new chat, **pin**, **rename**, **delete**, and **export** (download as Markdown).
+- AI conversations are now **persisted per-user** (RTDB, served via the JWT API). The assistant uses a saved conversation's stored history as the source of truth when a `conversationId` is supplied; otherwise it stays ephemeral (the floating dock).
+- The floating ✦ dock gains a **"Workspace ⤢"** link. New APIs under `/assistant/conversations` (list/create/get/update/delete). Backend tests now **34**.
+
+### 💬 Messaging depth + Notification screen (Phase 4)
+
+- **Emoji reactions** on messages (toggle, with reactor list on hover).
+- **Read receipts**: per-conversation last-read tracking → unread badges on the deck and conversation list, plus a **"Seen"** indicator on your latest message.
+- **Inline attachments**: share images (PNG/JPEG/GIF/WebP) and PDFs up to 256 KB, with strict server-side type/size validation; images preview inline, others download. (Large-file object storage is a future enhancement; the limit is enforced and explained.)
+- A **dedicated Notification Center screen** (`/notifications`) launched from the bell — category/unread filters, mark-read, mark-all-read — alongside the quick bell dropdown.
+- New APIs: `PUT /conversations/:id/read`, `PUT /conversations/:id/messages/:mid/react`; message send now accepts an `attachment`. A scoped 512 KB JSON limit applies to `/conversations` only (everything else stays at 10 KB). Backend tests now **33**.
+
+### 📡 Event bus & Notification Center (Phase 3)
+
+- An application-wide **event bus** (`backend/src/events/bus.js`) lets modules communicate through events (`token.referred`, `queue.created`, `queue.archived`, `message.sent`, …) instead of tightly-coupled calls. Emitting is fire-and-forget and isolated — a failing subscriber can't break the request path.
+- A **Notification Center**: a real-time bell in the header with unread badge, list, mark-read / mark-all-read. Notifications are generated by event subscribers (e.g. a new message notifies the other conversation members; a referral/queue change notifies admins).
+- Same security model as messaging — content via the JWT API, real-time via a content-free `notificationSignals/$user` node. New APIs: `GET /notifications`, `PUT /notifications/:id/read`, `PUT /notifications/read-all`. Backend tests now **32**.
+
+### 🗨️ Internal messaging (Phase 2 — core)
+
+- **Floating messaging deck** (bottom-right, on every screen) with conversation list, chat window, and **1:1 + group chat for admins and staff**, plus a **Team Directory**.
+- **Security-preserving real-time**: message content is written via the backend (Admin SDK) and served **only through the JWT API after a server-side membership check** — never client-readable. Real-time delivery uses a **content-free `messageSignals` RTDB node** clients subscribe to, then refetch over the API. No new infrastructure; fits the existing JWT + RTDB architecture.
+- New APIs: `GET /directory`, `GET/POST /conversations`, `GET/POST /conversations/:id/messages`. Backend tests now **29** (directory, group create, send/list, membership 403, auth).
+
+### 🤖 AI Assistant (Phase 1)
+
+- A **global floating assistant** button on every screen (self-hides unless an admin/staff is signed in) opening a chat panel with suggested prompts and Markdown answers.
+- **Provider abstraction** (`backend/src/ai/providers/*`): business logic depends only on an `AIProvider` interface. Ships a zero-config **GroundedProvider** (default) plus opt-in **OpenAI / Groq / OpenRouter / Ollama / Gemini** providers, all selected via `AI_PROVIDER` env — no code change to switch.
+- **Retrieval-Augmented Generation**: every answer is built from verified backend data (traffic stats, predictions, queue overview, staff metrics) retrieved first — the assistant **never fabricates operational figures** and says so when data is unavailable.
+- **Failover**: if a configured LLM errors, it falls back to the deterministic grounded provider, so the assistant never goes dark. Usage/token logging included.
+- **Per-user rate limit** on `POST /assistant` (20/min) to cap LLM spam/cost.
+- New `POST /api/v1/assistant` (admin or staff). Backend tests now **24** (assistant grounded answer, empty-question, auth).
+
+### 🚀 ML artefact shipped to backend + per-queue analytics
+
+- The trained `predictions.json` is now shipped under `backend/models/` and loaded by the prediction service in production (with the analytics-pipeline path preferred when present).
+- New per-queue **analytics** view on the queue Manage screen (`GET /admin/queues/:id/analytics`) — totals + peak-hours chart.
+
+---
+
+## QueueLess v1.3.0 — Polaris
+
+Codename **Polaris** · Milestone _Relay_. This release makes the queue *flow*: tokens can be handed
+between counters without being lost, administrators can shape their own queues,
+the dashboards report live, and a practical predictive layer helps staff stay
+ahead of the rush.
+
+### 🔀 Token referral / transfer between counters
+
+- A live token can be **referred** from one counter to another (e.g. hospital OPD → Eye Specialist) and is merged into the destination queue.
+- Keeps its **original token number** and records a full **referral trail** (`from → to`, reason, staff, time).
+- Flagged `referred` — served as **priority-tier** at the destination (already waited once) and **exempt from auto-expiry** while in the building.
+- Endpoints: `POST /admin/queue/refer/:tokenId`, `POST /staff/queue/refer/:tokenId`.
+
+### 🧩 Custom queue management
+
+- Admins can create their own queues within an Industry Type — full CRUD: create, edit, enable/disable, archive, **delete (with active-token safeguard)**, reorder, set capacity / average service time / working hours / token prefix.
+- New **Queue Management** screen (`/admin/queues`) with live cards (status badges, waiting count, now-serving, estimated wait, at-capacity).
+- Endpoints under `/admin/queues`; active queues exposed on public `/config`.
+
+### ⏱ Live queue status
+
+- **"Serving for"** live timer (updates every second) on admin & staff dashboards.
+- **Next in Queue** indicator (e.g. `A-023`) per counter.
+- Optional **patient name** captured at token issue and shown to staff/admin.
+
+### 🔮 Predictive insights (explainable, cold-start safe)
+
+- New `GET /admin/predictions`: per-queue wait forecasts, short-horizon congestion alerts, and actionable recommendations (open counter / add staff / rebalance).
+- Every prediction is **traceable to observed data** with a confidence level; falls back to rule-based defaults during cold-start — no fabricated outputs.
+- Surfaced as a **Predictive insights** panel on the Analytics page.
+
+### 🗄 Full token lifecycle in MongoDB
+
+- Every token's complete record is mirrored to a Mongo `tokens` collection at each transition (issued/called/served/referred/expired), alongside the `queue_events` log. Firebase RTDB remains the live store.
+
+### 🗂 Dedicated queue screens & staff assignment
+
+- Split queue management into **three uncluttered screens**: list (`/admin/queues`), **Create** (`/admin/queues/new`), and **Manage** (`/admin/queues/:id`) with a clearly separated **Danger zone** delete.
+- **Per-queue staff assignment** on the Manage screen — assign/reassign operators to a counter. New `PUT /admin/staff/:username/service` and `GET /admin/queues/:id/staff`.
+
+### 🏭 Richer defaults & consistent labels
+
+- Expanded the **default queues for every Industry Type** (e.g. Medical now ships Eye Specialist, Cardiology, Dental, ENT, Dermatology, Orthopedics, Pediatrics, Gynecology alongside OPD/Lab/Pharmacy/Radiology/Emergency).
+- Custom-queue labels now resolve **consistently on every page** (Lookup, Report, Display, etc.) via a central queue registry.
+
+### 📊 Trained ML models
+
+- New `analytics/models/train_predictor.py` trains a **GradientBoostingRegressor** (service time), **seasonal arrival forecast**, and **IsolationForest** anomaly bounds, exporting a compact `predictions.json` artefact.
+- `prediction.service.js` loads the artefact when present (cached by mtime) and **falls back to explainable heuristics** otherwise — no fabricated outputs. Trainer runs in Analytics CI.
+
+### ✏️ Renames & misc
+
+- Settings: **"Industry profile" → "Industry Type"** (label only; internal `industry` field unchanged for backward compatibility).
+- New interactive **Credits** page (`/credits`).
+- Frontend API client **modularised** under `services/api/*` with a barrel re-export — zero breaking changes to existing imports.
+- Backend tests expanded to **21** (referral, queue CRUD + safeguards, single-queue fetch, staff assignment, predictions).
+
+---
+
+## QueueLess v1.2.5 — Nebula
+
+Codename **Nebula** · Milestone _Pulse_. This release turns QueueLess into a proactive, self-managing queue system. Admins gain granular service-level control, staff actions are tracked and attributed, customers receive early push alerts, and the queue can now reset itself overnight — all without manual intervention.
+
+### 🔔 Proactive customer notifications
+
+- Push notification at **position 2** — "You're almost up, head to the counter soon"
+- Push notification at **position 1** — "You're next, make your way now"
+- Triggered via the Web Push API on the customer's `/token/:id` page; works in background tabs
+- Notifications fire only when the queue position actually crosses the threshold (position change detection via `prevPositionRef`)
+
+### ♻️ Token re-queue
+
+- Expired tokens can be re-queued within a **2-hour window** from issuance
+- Re-queue preserves the original `service`, `priority`, and `groupSize`
+- New token issued with a fresh number; customer is redirected to the new token page
+- Backend: `POST /tokens/:id/requeue` with Joi UUID validation
+
+### 👨‍👩‍👧 Group / family tokens
+
+- Customers can select a **group size of 1–5** when taking a token
+- Group badge displayed on the customer's token page and in the admin waiting list
+- Hidden for the Medical/Hospital industry profile (individual patient flow)
+- `groupSize` stored on the token record and logged to analytics
+
+### ⏸ Per-service pause
+
+- Admins can **pause and resume individual service queues** independently of the global pause
+- Paused service column shows a `PAUSED` badge; "Call Next" is blocked for that service
+- Customers on `/take` see paused services as dimmed cards and are automatically redirected to the first available service
+- Priority tokens always bypass per-service pause
+
+### 🚨 SLA wait alert
+
+- Admin dashboard shows a **red alert bar** when any service exceeds the configured SLA wait target (minutes)
+- SLA threshold is set in Settings → Queue Behaviour
+- Calculated client-side from `cfg.slaMinutes` and live waiting-token `estimatedWaitSeconds`
+
+### 📈 Staff performance metrics
+
+- New **Staff Performance table** in Admin Analytics — tokens served, average service time, tokens called per staff member
+- Attributed from `staff_username` stored on every `token_called` / `token_served` analytics event
+- Backend: `GET /admin/analytics/staff` — MongoDB aggregation grouped by `staff_username`
+- Both admin dashboard calls and staff portal calls now carry the authenticated username
+
+### 🗓 Scheduled auto-reset
+
+- Admins can set a **daily auto-reset time** (HH:MM) in Settings → Queue Behaviour
+- A `setInterval` scheduler (Asia/Karachi timezone via `Intl.DateTimeFormat`) checks once per minute and triggers `resetQueue()` when the time matches
+- A `lastAutoResetDate` flag prevents double-resets within the same day
+- Backend: `scheduler.service.js`
+
+### 👥 Multiple admin accounts
+
+- Admins can **create and delete secondary admin accounts** at `/admin/manage`
+- Maximum of 10 accounts; duplicate usernames rejected; passwords bcrypt-hashed (`BCRYPT_ROUNDS = 10`)
+- Admins cannot delete their own account (blocked on both frontend and backend)
+- "You" badge shown next to the currently signed-in admin in the accounts list
+- Backend: `GET/POST/DELETE /admin/admins`
+
+### 📺 Display board customisation
+
+- Admins can set a **permanent welcome message** shown as a banner on the display board (`/display`)
+- Configured in Settings → Display Board
+- Stored in Firebase config as `displayMessage`; cleared by saving an empty string
+
+### 🤝 Appointment → walk-in merge
+
+- Confirmed appointments are automatically **converted to priority tokens** within a ±5-minute window of their scheduled time
+- A `setInterval` service checks every minute for unmerged confirmed appointments
+- Prevents double-issue by writing the new `tokenId` back to the appointment record
+- Logs an `appointment_merged` analytics event
+- Backend: `appointmentMerge.service.js`
+
+### 🔍 Analytics — all historical tokens
+
+- Analytics (`GET /admin/analytics`) now cross-references **Firebase RTDB** for token counts
+- Every token ever issued (including any issued before event-logging was set up) is reflected in `totalIssued`, `totalExpired`, peak-hour distribution, and service distribution
+- Wait-time stats (`avgWaitSeconds`) still come from the event log where they are recorded
+- CSV parser refactored to use column-name-to-index map from the header row (no more hardcoded positional indices)
+
+### 🐛 Bug fixes
+
+- Staff portal `callNextToken()` was never passing `staffUsername` — all staff actions showed `null` in analytics; fixed by passing `req.user.sub`
+- Admin dashboard `apiCallNext` / `apiCallNextPriority` calls were missing `staffUsername`; fixed by passing `user.sub` from the frontend
+- `position` constant in `MyToken.jsx` was referenced in a `useEffect` dep array before being declared (Temporal Dead Zone); fixed by hoisting the calculation above all `useEffect` hooks
+
+---
+
+## QueueLess v1.2.0 — Eclipse
+
+Codename **Eclipse** · Milestone _Crew_. The biggest release yet — full account management for admins and staff, a smarter queue engine, eight new platform features, and a zero-vulnerability dependency baseline.
+
+### 👤 Admin & staff account management
+
+- Admin profile page — edit display name, view username and role
+- Admin change-password flow with current-password verification
+- Staff profile page — edit display name, view assigned service
+- Staff change-password flow
+- **ADMIN ▼** dropdown in the navigation header — theme toggle (light/dark pill switch), My profile, Change password, Sign out
+- Staff dropdown — My queue, My profile, Change password
+- Organisation name and industry type shown next to the logo and in the footer status bar
+
+### 🚦 Priority queue engine
+
+- Priority tokens displayed in a dedicated amber section above all regular service columns
+- When any priority token is waiting, all regular service queues are visually paused and "Call Next" is blocked — enforced on both frontend and backend
+- `POST /admin/queue/call-next-priority` — calls the earliest priority token across **all** services regardless of which counter
+- `callNextToken()` returns `409 PRIORITY_BLOCKING` if a regular token would be called while priority tokens are pending
+- Priority tokens bypass the queue-paused gate — they can always be issued even when the general queue is suspended
+
+### 🌟 Eight new features
+
+| Feature | Where | Description |
+|---------|-------|-------------|
+| **Display board** | `/display` | Now shows a priority section, flash animation on token change, notes on called tokens, and an announcement banner |
+| **Live announcements** | Admin Dashboard | Broadcast a message instantly to Home, Take-a-Token, Staff dashboard, and display board via Firebase real-time |
+| **Staff dashboard upgrade** | Staff Dashboard | Announcement banner, priority-at-other-counters alert, skip/no-show for called token, inline note editor per token |
+| **Wait preview** | `/take` | Each service card shows live waiting count + estimated wait time before customer commits |
+| **Token lookup** | Admin Dashboard | Search panel to find any token by number, ID, or note; inline note editor in results |
+| **Analytics charts** | Admin Report | Hourly volume bar chart (SVG, no external library) added alongside the existing heatmap |
+| **Token notes** | Staff & Admin | Attach short notes to any token; appears in waiting lists, dashboards, and display board |
+| **Appointment booking** | `/book` & `/admin/appointments` | Customers book slots; Admin views, confirms, or cancels bookings |
+
+### 🔒 Security
+
+- `firebase-admin` upgraded 12 → 14 resolving the transitive chain of vulnerable `gaxios` / `google-gax` / `teeny-request` packages
+- `overrides.uuid = ^11.1.1` — patches GHSA-w5hq-g745-h8pq (missing buffer bounds check in uuid v3/v5/v6 when `buf` is provided)
+- `overrides.js-yaml = ^4.1.0` — patches quadratic-complexity DoS via repeated YAML merge-key aliases
+- **`npm audit` reports 0 vulnerabilities** (was 8 moderate)
+
+### 🩹 Bug fixes
+
+- Dark mode: `.bg-ink` elements (buttons, selected cards, table headers) now show correct text colour in dark mode via global CSS override
+- Settings page (`/admin/setup`) no longer accessible without login — auth guard added
+- `401` interceptor scoped to protected routes only — cold-start Render errors no longer wipe auth tokens and redirect to login
+- React Rules of Hooks violations in `AdminProfile` and `StaffProfile` fixed (auth guard moved after all hook calls)
+- CSV export on Analytics page now sends `Authorization: Bearer` header via `fetch()` + blob download
+- `loading` reference error in `Home.jsx` fixed by destructuring from `useQueueState`
+
+---
+
+## QueueLess v1.0.5 — Comet
+
+Codename **Comet** · Milestone _Alive_. A focused patch release hardening the analytics pipeline, fixing UI regressions, and improving admin tooling.
+
+### 🛠 Fixes & improvements
+
+**Analytics**
+- Detailed report page (`/admin/report`) with AI-generated action plan and staffing recommendation
+- Dual-write analytics to MongoDB + local CSV for redundancy
+- Auto-refresh analytics data every 30 seconds with manual refresh button
+- Dynamic heatmap — hours now computed from real data instead of hardcoded range
+- Per-service intensity calculation corrected for accurate colour scaling
+- Hardcoded chart labels replaced with dynamic service names
+
+**Admin navigation**
+- Global admin navigation bar with links to Dashboard, Analytics, Report, and Settings
+- "Generate Report" removed from navbar; moved to a dashboard button for cleaner UX
+
+**UI**
+- Hero section layout fixed for 100% browser zoom
+- Live status card centred in its column
+- Footer logo visibility corrected; hero lockup enlarged
+- Logo assets updated with final versions
+
+**Stability**
+- MongoDB fallback for analytics when primary write fails (non-fatal)
+- Firebase mock refs in tests updated to match multi-path atomic update schema
+- Vite peer dependency conflict resolved for clean Vercel builds
+- High-severity npm vulnerability patched
+
+---
+
+## QueueLess v1.0.0 — Nova
+
+Codename **Nova** · Milestone _Sight_. The first pre-release of QueueLess — a cloud-native, token-based queue management system built for real organisations.
+
+### ✨ What's included
+
+**Core queue system**
+- Walk-in token issuance with email notification and tracking link
+- Real-time queue state via Firebase Realtime Database — no refresh needed
+- Priority token support — flagged tokens served before regular queue
+- Token expiry, skip / no-show marking
+- Customer-facing token tracking page (`/token/:id`) with live position, ETA, QR code, WhatsApp share, and browser push notifications
+- Confetti + sound alert when your token is called
+
+**Admin panel**
+- Secure JWT-based admin login
+- Queue control dashboard — pause, resume, reset, call next, skip tokens
+- Multi-service queue support — each service counter managed independently
+- AI Auto Mode — ML-predicted call intervals from historical traffic data
+- Analytics dashboard with per-hour and per-service traffic heatmap
+- Staff management — create, list, and remove staff accounts
+
+**Staff portal**
+- Staff login (username/password or PIN)
+- Per-counter queue view with call-next and no-show controls
+- Staff presence indicator (online/offline) visible to admin
+
+**Public display**
+- `/display` — full-screen TV-ready board showing now-serving tokens per service, live clock, and queue counts
+
+**Infrastructure**
+- React 18 + Vite frontend deployed on Vercel
+- Node.js + Express backend deployed on Render
+- Firebase Realtime Database (Singapore region)
+- MongoDB Atlas for analytics persistence
+- GitHub Actions CI/CD pipeline
+- Firebase Analytics integration
+
+---
+*QueueLess is a cloud-native queue management system. No app installation required — customers use any browser.*

@@ -44,11 +44,20 @@ The same scenarios are automated in `backend/test/queueless.test.js` (`npm test`
 
 The Security panel needs to act as a customer while you are signed in as admin in the same browser. Sending `X-Act-As-Customer: 1` makes the server **ignore the staff cookie** for that request. It can only *reduce* privileges; it cannot grant any. It is documented here so it is not mistaken for a backdoor.
 
+## Password storage
+Every staff/admin password is stored only as a bcrypt hash (cost 10), including accounts created from environment variables and from the Users & groups form. A test checks every table, the audit log and API output for plain-text passwords. Failed-login log entries record the username, never the password. The admin database view shows hashes shortened by default; revealing them is admin-only and audited.
+
+## Cloud hardening
+Container runs as a non-root user with a health check. `TRUST_PROXY` / `COOKIE_SECURE` / `FORCE_HTTPS` match the deployment (direct EC2 vs behind a load balancer). The AWS template makes RDS private (reachable only from the app security group), encrypts storage, uses IMDSv2, and creates a private, encrypted, versioned S3 bucket that denies non-HTTPS access. S3 access uses the instance's IAM role, so no keys are stored. Limit: passwords passed to CloudFormation appear in EC2 user data.
+
+## Audit log
+Allowed and blocked security actions (logins, failed logins, 401/403, validation rejections, rate limits, duplicate tokens, invalid transitions, token and user changes) are written to the `audit_log` table and printed as `[AUDIT]` lines on the server console. Admins see them live at `/admin/backend`.
+
 ## Known limitations (be upfront about these)
 
 - **Customer identity is a browser cookie.** Clearing cookies gives a new anonymous identity, so duplicate-token protection is per browser session, limited by the per-IP token rate limit. A stronger version would verify phone/email (out of scope: no SMS/integrations).
 - Rate-limit counters are kept in memory: they reset on restart and are not shared across multiple server instances.
-- No multi-factor authentication, password reset, or account lockout beyond the login rate limit; no audit log.
+- No multi-factor authentication, password reset, or account lockout beyond the login rate limit; an audit log exists (audit_log table, last 1000 events) but it is not tamper-proof.
 - CSP allows inline styles (the Helmet default) for simplicity.
 - `node:sqlite` is marked experimental by Node.js and prints a warning at startup.
 - On free hosting with ephemeral disks, queue data is not durable (see README).

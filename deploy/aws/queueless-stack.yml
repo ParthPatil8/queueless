@@ -1,0 +1,200 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  QueueLess on AWS (IaaS): EC2 runs the Docker container, RDS PostgreSQL stores the data (private, reachable only from
+  the EC2 security group), S3 holds encrypted backups. Written for AWS Academy Learner Lab (uses the existing
+  LabInstanceProfile because Learner Lab does not allow creating IAM roles).
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC to deploy into (the default VPC is fine)
+  PublicSubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: A public subnet for the EC2 instance
+  DbSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: At least two subnets in different Availability Zones for RDS
+  InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t2.micro, t3.micro, t3.small, t3.medium]
+  InstanceProfileName:
+    Type: String
+    Default: LabInstanceProfile
+    Description: Existing instance profile (IAM role) attached to EC2. Learner Lab provides LabInstanceProfile.
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  RepoUrl:
+    Type: String
+    Description: HTTPS URL of your public GitHub repository (for example https://github.com/you/5024147_MADLab.git)
+  AdminUsername:
+    Type: String
+    Default: admin
+    AllowedPattern: '[A-Za-z0-9_.-]{3,32}'
+  AdminPassword:
+    Type: String
+    NoEcho: true
+    AllowedPattern: '[A-Za-z0-9]{12,64}'
+    ConstraintDescription: 12-64 letters and digits only
+  DbPassword:
+    Type: String
+    NoEcho: true
+    AllowedPattern: '[A-Za-z0-9]{12,40}'
+    ConstraintDescription: 12-40 letters and digits only
+  DbEngineVersion:
+    Type: String
+    Default: '16.11'
+    Description: RDS PostgreSQL version. If AWS says it is unavailable, pick a current 16.x/17.x version in the RDS console.
+  SshCidr:
+    Type: String
+    Default: ''
+    AllowedPattern: '^$|^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$'
+    Description: Optional CIDR allowed to SSH (leave blank for no SSH access)
+
+Conditions:
+  HasSsh: !Not [!Equals [!Ref SshCidr, '']]
+
+Resources:
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: QueueLess app - HTTP from anywhere (SSH only if SshCidr is set)
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP
+        - !If
+          - HasSsh
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: !Ref SshCidr
+            Description: SSH from the allowed CIDR
+          - !Ref AWS::NoValue
+
+  DbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: QueueLess database - PostgreSQL only from the app security group
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref AppSecurityGroup
+          Description: PostgreSQL from the app instance only
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: QueueLess database subnets
+      SubnetIds: !Ref DbSubnetIds
+
+  Database:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: !Ref DbEngineVersion
+      AllocatedStorage: '20'
+      StorageType: gp2
+      StorageEncrypted: true
+      DBName: queueless
+      MasterUsername: queueless
+      MasterUserPassword: !Ref DbPassword
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      VPCSecurityGroups:
+        - !GetAtt DbSecurityGroup.GroupId
+      PubliclyAccessible: false
+      MultiAZ: false
+      BackupRetentionPeriod: 1
+      DeletionProtection: false
+
+  BackupBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  BackupBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BackupBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt BackupBucket.Arn
+              - !Sub '${BackupBucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref InstanceProfileName
+      MetadataOptions:
+        HttpTokens: required
+        HttpEndpoint: enabled
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: true
+          SubnetId: !Ref PublicSubnetId
+          GroupSet:
+            - !Ref AppSecurityGroup
+      Tags:
+        - Key: Name
+          Value: queueless-app
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          # small instances need swap to build the frontend
+          dd if=/dev/zero of=/swapfile bs=1M count=1024
+          chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+          dnf install -y docker git
+          systemctl enable --now docker
+          git clone ${RepoUrl} /opt/queueless
+          cd /opt/queueless
+          docker build -t queueless .
+          docker run -d --name queueless --restart unless-stopped -p 80:4000 \
+            -e NODE_ENV=production \
+            -e DATABASE_URL=postgres://queueless:${DbPassword}@${Database.Endpoint.Address}:5432/queueless \
+            -e DATABASE_SSL=true \
+            -e S3_BUCKET=${BackupBucket} -e S3_REGION=${AWS::Region} \
+            -e ADMIN_USERNAME=${AdminUsername} -e ADMIN_PASSWORD=${AdminPassword} \
+            -e COOKIE_SECURE=false -e TRUST_PROXY=0 -e LOG_FORMAT=json \
+            queueless
+
+Outputs:
+  AppUrl:
+    Description: Open this URL after the instance finishes building (about 5-8 minutes)
+    Value: !Sub 'http://${AppInstance.PublicIp}'
+  DatabaseEndpoint:
+    Value: !GetAtt Database.Endpoint.Address
+  BackupBucketName:
+    Value: !Ref BackupBucket

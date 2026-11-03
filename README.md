@@ -24,7 +24,7 @@ These accounts are **never created when `NODE_ENV=production`**.
 
 Development mode with hot reload (two terminals): `npm run install:all`, then `npm run dev:backend` (port 4000) and `npm run dev:frontend` (http://localhost:5173, proxies `/api` to the backend).
 
-Tests: `npm run install:all && npm test` (11 backend tests: queue flow, authorization, validation, duplicates, transitions, privacy, rate limits, headers).
+Tests: `npm run install:all && npm test` (16 backend tests). To run them on PostgreSQL too: `TEST_DATABASE_URL=postgres://user:pass@localhost:5432/dbname npm test` (the schema in that database is wiped).
 
 ## Features
 
@@ -33,6 +33,16 @@ Tests: `npm run install:all && npm test` (11 backend tests: queue flow, authoriz
 - **Admin**: totals, enable/disable counters, add counters, and the **Security & Safety** panel with six live checks.
 - Token statuses everywhere: `waiting`, `called`, `served`, `skipped`, `cancelled`.
 - Estimated wait = people ahead x the counter's average minutes per customer (a simple estimate, not a prediction).
+
+## Backend and database visibility
+- **Admin > Backend** (`/admin/backend`): live, read-only view of the real database tables (users, customers, services, tickets, sessions, audit_log) and the security & activity log. Hashes are hidden.
+- **Server console / Render Logs:** every security action prints a line starting `[AUDIT]` (allowed or BLOCKED).
+- **Terminal:** `npm run db:view` prints every table with the **full** hashes (add `-- --mask` to shorten them). Works on SQLite and, with `DATABASE_URL`, PostgreSQL.
+- **Password storage:** all staff/admin passwords are bcrypt hashes. The Backend page shows a live **Password storage check**, and "Reveal full hashes" (admin only, written to the audit log) shows them in full. Customers have no password; their browser token is stored as a SHA-256 hash.
+- **Admin > Users & groups:** add a staff/admin user; it is saved to the `users` table with its group (role).
+
+## Cloud, containers and AWS
+QueueLess runs on SQLite by default and on PostgreSQL (for example Amazon RDS) when `DATABASE_URL` is set. It ships with a `Dockerfile`, `docker-compose.yml`, a CloudFormation template for EC2 + RDS + S3 with locked-down security groups, S3 backups and JSON logs. See **CLOUD.md** (what is built vs tested) and **deploy/aws/README.md**.
 
 ## Project layout
 
@@ -73,5 +83,6 @@ Copy `.env.example` to `.env` for local production-mode testing. Never commit `.
 |---|---|
 | Implemented and tested locally | All features above; 11 automated backend tests passing; production build; end-to-end run with curl (join, call, serve, status, 401/403/400/409/429 responses, restart persistence); production-mode checks (weak/missing admin password refuses to start, demo accounts absent, `Secure` cookie, bad Origin refused) |
 | Deployed and verified publicly | **Not done** - no hosting account or credentials were available in the build environment |
-| Not verified | Visual/responsive appearance and the Security panel buttons in a real browser (build compiles, but no browser was available to click through) |
+| UI behaviour checked in a simulated browser (jsdom) | Staff and admin sign-in through the form, staff dashboard (call next), admin page, Security panel (all six checks PASS), customer join / token page / cancel. A bug that blanked the staff dashboard after login was found this way and fixed |
+| Not verified | How it *looks* (layout, colours, phone responsiveness) in a real browser - no real browser was available. Open it once yourself before presenting |
 | Manual action needed | Create the hosting account, set the environment variables, deploy (steps above) |

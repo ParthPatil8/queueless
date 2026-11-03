@@ -6,6 +6,7 @@ import Ticket from './pages/Ticket.jsx';
 import StaffLogin from './pages/StaffLogin.jsx';
 import StaffDashboard from './pages/StaffDashboard.jsx';
 import Admin from './pages/Admin.jsx';
+import Backend from './pages/Backend.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 // If any page throws while rendering, show a message instead of a blank screen.
@@ -51,7 +52,8 @@ function Nav() {
         <nav aria-label="Main">
           <NavLink to="/" end>Join a queue</NavLink>
           {user && <NavLink to="/staff" end>Staff</NavLink>}
-          {user?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
+          {user?.role === 'admin' && <NavLink to="/admin" end>Admin</NavLink>}
+          {user?.role === 'admin' && <NavLink to="/admin/backend">Backend</NavLink>}
           {user ? (
             <button className="linklike" onClick={logout}>Sign out ({user.username})</button>
           ) : (
@@ -108,6 +110,7 @@ export default function App() {
           <Route path="/staff/login" element={<StaffLogin />} />
           <Route path="/staff" element={<Protected><StaffDashboard /></Protected>} />
           <Route path="/admin" element={<Protected role="admin"><Admin /></Protected>} />
+          <Route path="/admin/backend" element={<Protected role="admin"><Backend /></Protected>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </ErrorBoundary>

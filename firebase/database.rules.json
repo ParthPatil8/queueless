@@ -1,0 +1,109 @@
+{
+  "rules": {
+
+    "queue": {
+      "state": {
+        ".read": true,
+        ".write": false,
+        "status":              { ".validate": "newData.isString() && (newData.val() === 'running' || newData.val() === 'paused')" },
+        "currentTokenNumber":  { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "lastCalledAt":        { ".validate": "newData.isNumber() || newData.val() == null" },
+        "pausedAt":            { ".validate": "newData.isNumber() || newData.val() == null" }
+      },
+
+      "counter": {
+        ".read": false,
+        ".write": false,
+        "value": { ".validate": "newData.isNumber() && newData.val() >= 0" }
+      },
+
+      "tokens": {
+        ".read": true,
+        ".write": false,
+        "$tokenId": {
+          ".validate": "newData.hasChildren(['id', 'number', 'status', 'service', 'issuedAt', 'priority'])",
+          "id":        { ".validate": "newData.isString() && newData.val() === $tokenId" },
+          "number":    { ".validate": "newData.isNumber() && newData.val() > 0" },
+          "status":    { ".validate": "newData.isString() && newData.val().matches(/^(waiting|called|served|expired)$/)" },
+          "service":   { ".validate": "newData.isString()" },
+          "priority":  { ".validate": "newData.isString() && (newData.val() === 'normal' || newData.val() === 'priority')" },
+          "issuedAt":  { ".validate": "newData.isNumber()" },
+          "calledAt":  { ".validate": "newData.isNumber() || newData.val() == null" },
+          "servedAt":  { ".validate": "newData.isNumber() || newData.val() == null" },
+          "expiresAt": { ".validate": "newData.isNumber()" },
+          "expiredAt": { ".validate": "newData.isNumber() || newData.val() == null" },
+          "skippedAt": { ".validate": "newData.isNumber() || newData.val() == null" },
+          "groupSize": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+          "note":      { ".validate": "newData.isString() && newData.val().length <= 500 || newData.val() == null" },
+          "patientName":     { ".validate": "newData.isString() && newData.val().length <= 100 || newData.val() == null" },
+          "referred":        { ".validate": "newData.isBoolean() || newData.val() == null" },
+          "referredAt":      { ".validate": "newData.isNumber() || newData.val() == null" },
+          "referralReason":  { ".validate": "newData.isString() && newData.val().length <= 300 || newData.val() == null" },
+          "referralHistory": { ".validate": true },
+          "$other":    { ".validate": false }
+        }
+      },
+
+      "announcement": {
+        ".read": true,
+        ".write": false
+      }
+    },
+
+    "admins": {
+      ".read": false,
+      ".write": false
+    },
+
+    "presence": {
+      ".read": true,
+      "$username": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['online', 'lastSeen', 'service', 'username']) && newData.child('username').val() === $username"
+      }
+    },
+
+    "messageSignals": {
+      /* Content-free real-time triggers for messaging. Clients READ these to know when to refetch messages via the JWT API. No message content is ever stored here; writes are backend-only (Admin SDK). */
+      ".read": true,
+      ".write": false,
+      "$conversationId": {
+        "updatedAt": { ".validate": "newData.isNumber()" }
+      }
+    },
+
+    "conversations": {
+      /* Message content — backend-only via Admin SDK. NOT client-readable: served exclusively through the authorized REST API after a membership check. */
+      ".read": false,
+      ".write": false
+    },
+
+    "notificationSignals": {
+      /* Content-free real-time triggers for the notification center. Clients READ these to know when to refetch notifications via the JWT API. */
+      ".read": true,
+      ".write": false,
+      "$username": {
+        "updatedAt": { ".validate": "newData.isNumber()" }
+      }
+    },
+
+    "notifications": {
+      /* Notification content — backend-only via Admin SDK; served via the JWT API. */
+      ".read": false,
+      ".write": false
+    },
+
+    "uploads": {
+      /* Shared file blobs (RTDB-backed, Spark-plan friendly) — backend-only via Admin SDK; served via the JWT API. */
+      ".read": false,
+      ".write": false
+    },
+
+    "uploadIndex": {
+      /* Per-owner file metadata index — backend-only; served via the JWT API. */
+      ".read": false,
+      ".write": false
+    }
+  }
+}
+
